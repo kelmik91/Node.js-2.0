@@ -11,7 +11,6 @@ const isFile = fileName => {
 const currentDirectory = process.cwd();
 console.log(currentDirectory);
 
-
 let list = fs.readdirSync(currentDirectory);
 
 const para = function () {
@@ -32,30 +31,30 @@ const para = function () {
             }
 
             const readStream = fs.createReadStream(answer.fileName, 'utf8');
-
+            const data = []
             readStream.on('data', (chunk) => {
 
                 const arrChunk = chunk.split("\n");
 
-                const writeStream = fs.createWriteStream(`./${process.argv[2]}_requests.log`, { flag: 'a' });
-
-                const data = []
-                for (let i = 0; i < 2; i++) {
+                for (let i = 0; i < 1; i++) {
                     if (arrChunk[i].includes(process.argv[2])) {
-                        console.log(i);
-                        writeStream.write(arrChunk[i] + "\n");
+                        console.log('Совпадение!');
+                        data.push(arrChunk[i])
                     }
                 }
-                
-                // writeStream.end(() => console.log('File writing finished'));
-
             });
+
+            const writeStream = fs.createWriteStream(`./${process.argv[2]}_requests.log`, { flag: 'a' });
 
             readStream.on('end', () => {
-                console.log('File reading finished')
+                console.log('File reading finished');
+                for (let i = 0; i < data.length; i++) {
+                    writeStream.write(data[i] + '\n');
+                }
+                writeStream.end(() => console.log('File writing finished'));
             });
-            readStream.on('error', () => console.log(err));
 
+            readStream.on('error', () => console.log(err));
         });
 }
 
