@@ -8,8 +8,7 @@ const isFile = fileName => {
     return fs.lstatSync(fileName).isFile();
 }
 
-const currentDirectory = process.cwd();
-console.log(currentDirectory);
+const currentDirectory = process.argv[3] ? process.argv[3] : process.cwd();
 
 let list = fs.readdirSync(currentDirectory);
 
