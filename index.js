@@ -1,22 +1,64 @@
+#!/usr/bin/env node
+
 const fs = require('fs');
+const path = require("path");
+const inquirer = require("inquirer");
 
-const readStream = fs.createReadStream('./access.log', 'utf8');
+const isFile = fileName => {
+    return fs.lstatSync(fileName).isFile();
+}
 
-readStream.on('data', (chunk) => {
+const currentDirectory = process.cwd();
+console.log(currentDirectory);
 
-    const arrChunk = chunk.split("\n");
 
-    for (let i = 0; i < 2; i++) {
-        if (arrChunk[i].includes('89.123.1.41')) {
-            fs.writeFile('./89.123.1.41_requests.log', arrChunk[i] + "\n", { flag: 'a' }, (err) => console.log(err));
-        }
-        else if (arrChunk[i].includes('34.48.240.111')) {
-            fs.writeFile('./34.48.240.111_requests.log', arrChunk[i] + "\n", { flag: 'a' }, (err) => console.log(err));
-        }
-    }
-});
+let list = fs.readdirSync(currentDirectory);
 
-readStream.on('end', () => {
-    console.log('File reading finished')
-});
-readStream.on('error', () => console.log(err));
+const para = function () {
+    inquirer
+        .prompt([{
+            name: "fileName",
+            type: "list",
+            message: "Choose file:",
+            choices: list,
+        }])
+        .then((answer) => {
+            console.log(answer.fileName);
+
+            if (!isFile(answer.fileName)) {
+                console.log('!answer.fileName.isFile');
+                list = fs.readdirSync(path.join(currentDirectory, answer.fileName));
+                para();
+            }
+
+            const readStream = fs.createReadStream(answer.fileName, 'utf8');
+
+            readStream.on('data', (chunk) => {
+
+                const arrChunk = chunk.split("\n");
+
+                const writeStream = fs.createWriteStream(`./${process.argv[2]}_requests.log`, { flag: 'a' });
+
+                const data = []
+                for (let i = 0; i < 2; i++) {
+                    if (arrChunk[i].includes(process.argv[2])) {
+                        console.log(i);
+                        writeStream.write(arrChunk[i] + "\n");
+                    }
+                }
+                
+                // writeStream.end(() => console.log('File writing finished'));
+
+            });
+
+            readStream.on('end', () => {
+                console.log('File reading finished')
+            });
+            readStream.on('error', () => console.log(err));
+
+        });
+}
+
+para();
+
+
